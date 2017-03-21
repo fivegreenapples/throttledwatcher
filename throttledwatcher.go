@@ -17,9 +17,9 @@ type Watcher struct {
 }
 
 // NewWatcher establishes a new watch on file, and will deliver events
-// to its channel after quietTime has elasped without any OS events
+// to its channel after deadTime has elasped without any OS events
 // seen on the file.
-func NewWatcher(file string, quietTime time.Duration) (*Watcher, error) {
+func NewWatcher(file string, deadTime time.Duration) (*Watcher, error) {
 	fileToWatch, err := filepath.Abs(file)
 	if err != nil {
 		return nil, errors.New("Couldn't get absolute path of file. " + err.Error())
@@ -37,7 +37,7 @@ func NewWatcher(file string, quietTime time.Duration) (*Watcher, error) {
 	}
 
 	go func() {
-		t := time.NewTimer(quietTime)
+		t := time.NewTimer(deadTime)
 		timerRunning := true
 		for {
 			select {
@@ -54,7 +54,7 @@ func NewWatcher(file string, quietTime time.Duration) (*Watcher, error) {
 						<-t.C
 					}
 				}
-				t.Reset(quietTime)
+				t.Reset(deadTime)
 				timerRunning = true
 			case watcherErr := <-watcher.Errors:
 				log.Println("Throttled Watcher error:", watcherErr)
